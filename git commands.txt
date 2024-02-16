@@ -1,0 +1,20 @@
+git clone "Repository link" - creates a remote copy of the github repository
+
+git add "file names" - adds specific files
+git add . - adds all modified files
+
+git commit -m "commit message" - Commits changes to  github
+git push origin "branch name" - pushes changes to our remote repository on github
+
+git init - creates a new repository of the current directory
+git remote add origin "link" - adds the github repo to the current directory
+git remote -v - to verify remote
+
+git branch - to check all branches
+git branch -M "new branch name" - changes name of branch
+git checkout "branch name" - to navigate to a different branch
+git checkout -b "new branch name" - to create new branch
+git branch -d "branch name" - to delete branch
+
+git fetch - fetches changes from the git repo
+git merge origin/"branch name" - to add the changes to your local repo
