@@ -6,10 +6,11 @@ addi $t0, $zero, 1 # y = 1
 loop:
     beq $s1, $zero, exitloop
         andi $t1, $s1, 1
-        bne $s1, $t1, target
+        beq $zero, $t1, target
             mul $t0, $t0, $s0
         target:
             mul $s0, $s0, $s0
             srl $s1, $s1, 1 
+    j loop
 exitloop:
     sw $t0, 0x10010100($zero)
