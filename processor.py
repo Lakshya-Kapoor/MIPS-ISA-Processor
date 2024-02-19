@@ -1,5 +1,18 @@
 class Processor:
-    pass
+    def __init__(self):
+        self.pc = 0
+    def instructionFetch(self):
+        self.IRD = i.fetch(self.pc)
+        self.pc += 4
+        self.instructionDecode()
+    def instructionDecode(self):
+        pass
+    def execute(self):
+        pass
+    def memoryAccess(self):
+        pass
+    def writeBack(self):
+        pass
 class instructionMemory(Processor):
     def __init__(self):
         # super().__init__()
@@ -13,9 +26,10 @@ class instructionMemory(Processor):
                     self.instMem[p] = i[j:j+8]
                     p += 1
     def fetch(self, pc):
+        # pc = int(pc, 2)
         s = ''
         for j in range(4):
-           s += self.instMem[pc+j][:]
+           s += self.instMem[pc+j]
         return s
 class dataMemory(Processor):
     def __init__(self):
@@ -33,5 +47,8 @@ class dataMemory(Processor):
         for i in range(4):
             s += self.dataMem[A+i]
         return s
+global i
 i = instructionMemory()
 d = dataMemory()
+p = Processor()
+p.instructionFetch()
