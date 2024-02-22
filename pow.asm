@@ -13,4 +13,4 @@ loop:
             srl $s1, $s1, 1 
     j loop
 exitloop:
-    sw $t0, 0x10010100($zero)
+    sw $t0, 0x100($zero)
