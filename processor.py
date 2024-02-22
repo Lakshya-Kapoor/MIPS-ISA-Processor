@@ -34,7 +34,7 @@ class instructionMemory(Processor):
 class dataMemory(Processor):
     def __init__(self):
         # super().__init__()
-        self.dataMem = ['']*1000
+        self.dataMem = {}
     def memWrite(self, WD, A):
         A = int(A, 2)
         p = 0
