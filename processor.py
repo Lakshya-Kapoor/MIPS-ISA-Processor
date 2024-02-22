@@ -1,6 +1,8 @@
 class Processor:
     def __init__(self):
         self.pc = 0
+        self.RD1 = ''
+        self.RD2 = ''
     def run(self):
         while True:
 
@@ -9,24 +11,29 @@ class Processor:
             self.pc += 4
 
             
-            # Instruction decode and regread phase
 
             # Control signals
             arr = []
-            for i in range(6):
+            for i in range(26,32):
                 arr.append(int(instruction[i], 2)) 
-            self.regDST = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2])
-            self.regWR = arr[0] & NOT(arr[1]) & NOT(arr[2])
+            self.regDST = NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5])
+            self.regWR = (arr[0] & NOT(arr[1]) & NOT(arr[2])) | (NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5]))
             self.aluSrc = arr[0] & NOT(arr[1])
             self.memRd = arr[0] & NOT(arr[1]) & NOT(arr[2])
             self.memReg = arr[0] & NOT(arr[1]) & NOT(arr[2])
             self.memWr = arr[0] & NOT(arr[1]) & arr[2]
-            self.jmp = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2]) & NOT(arr[3]) & arr[4] & NOT(arr[5]) 
-            
+            self.jmp = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2]) & NOT(arr[3]) & arr[4] & NOT(arr[5])
+            self.branch = arr[3] & NOT(arr[4]) & NOT(arr[5])
 
+            # Instruction decode and regread phase
             self.A1 = instruction[21:25+1]
             self.A2 = instruction[16:20+1]
-            self.A3 = instruction[16:20+1] or instruction[11:15+1]
+            if self.regDST:
+                self.A3 = instruction[11:15+1]
+            else:
+                self.A3 = instruction[16:20+1]
+            
+
 
 class instructionMemory(Processor):
     def __init__(self):
@@ -84,7 +91,6 @@ class regFile(Processor):
             self.RD2 = self.t[A2%8]
         else:
             self.RD2 = self.s[A2%16]
-        return self.RD1, self.RD2
     def regWD(self, WD3): # Requires the 5bit binary register number of A3 to write the data WD3
         A3 = int(self.A3, 2)
         if (A3 > 7 and A3 < 16):
