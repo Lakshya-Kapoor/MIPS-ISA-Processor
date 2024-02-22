@@ -11,6 +11,19 @@ class Processor:
             
             # Instruction decode and regread phase
 
+            # Control signals
+            arr = []
+            for i in range(6):
+                arr.append(int(instruction[i], 2)) 
+            self.regDST = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2])
+            self.regWR = arr[0] & NOT(arr[1]) & NOT(arr[2])
+            self.aluSrc = arr[0] & NOT(arr[1])
+            self.memRd = arr[0] & NOT(arr[1]) & NOT(arr[2])
+            self.memReg = arr[0] & NOT(arr[1]) & NOT(arr[2])
+            self.memWr = arr[0] & NOT(arr[1]) & arr[2]
+            self.jmp = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2]) & NOT(arr[3]) & arr[4] & NOT(arr[5]) 
+            
+
             self.A1 = instruction[21:25+1]
             self.A2 = instruction[16:20+1]
             self.A3 = instruction[16:20+1] or instruction[11:15+1]
@@ -81,6 +94,8 @@ class regFile(Processor):
 
 
 if __name__ == '__main__':
+    def NOT(num):
+        return 0 if (num) else 1
     i = instructionMemory()
     d = dataMemory()
     r = regFile()
