@@ -3,11 +3,13 @@ class Processor:
         self.pc = 0
         self.RD1 = ''
         self.RD2 = ''
+        self.alu1 = ''
+        self.alu2 = ''
     def run(self):
         while True:
 
             # Instruction fetch phase
-            instruction = i.fetch(self.pc)[::-1]
+            self.instruction = i.fetch(self.pc)[::-1]
             self.pc += 4
 
             
@@ -15,7 +17,7 @@ class Processor:
             # Control signals
             arr = []
             for i in range(26,32):
-                arr.append(int(instruction[i], 2)) 
+                arr.append(int(self.instruction[i], 2)) 
             self.regDST = NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5])
             self.regWR = (arr[0] & NOT(arr[1]) & NOT(arr[2])) | (NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5]))
             self.aluSrc = arr[0] & NOT(arr[1])
@@ -24,20 +26,34 @@ class Processor:
             self.memWr = arr[0] & NOT(arr[1]) & arr[2]
             self.jmp = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2]) & NOT(arr[3]) & arr[4] & NOT(arr[5])
             self.branch = arr[3] & NOT(arr[4]) & NOT(arr[5])
-
-            # Instruction decode and regread phase
-            self.A1 = instruction[21:25+1]
-            self.A2 = instruction[16:20+1]
-            if self.regDST:
-                self.A3 = instruction[11:15+1]
-            else:
-                self.A3 = instruction[16:20+1]
+            self.aluOp1 = NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5])
+            self.aluOp0 = arr[3] & NOT(arr[4]) & NOT(arr[5])
             
+            # Instruction decode and reg read phase
+            self.A1 = self.instruction[21:25+1]
+            self.A2 = self.instruction[16:20+1]
+            if self.regDST:
+                self.A3 = self.instruction[11:15+1]
+            else:
+                self.A3 = self.instruction[16:20+1]
+            
+            r.regRead()
+            
+            temp = self.signExtend(self.instruction[0:15+1])
 
 
+
+            # Execute phase
+            self.alu1 = self.RD1
+            if self.aluSrc:
+                self.alu2 = temp
+            else:
+                self.alu2 = self.RD2
+    def signExtend(self, s):
+        return '0'*16 + s
 class instructionMemory(Processor):
     def __init__(self):
-        # super().__init__()
+        super().__init__()
         self.instMem = ['']*1000
         with open("factorial.txt", "r") as file:
             line = file.readlines()
@@ -55,7 +71,7 @@ class instructionMemory(Processor):
         return s
 class dataMemory(Processor):
     def __init__(self):
-        # super().__init__()
+        super().__init__()
         self.dataMem = {}
     def memWrite(self, WD, A):
         A = int(A, 2)
@@ -71,11 +87,11 @@ class dataMemory(Processor):
         return s
 class regFile(Processor):
     def __init__(self):
-        # super().__init__()
+        super().__init__()
         self.zero = 0
         self.t = [0]*7
         self.s = [0]*7
-    def regRD(self): # Requires the 5bit binary register numbers of A1 and A2 to read from.
+    def regRead(self): # Requires the 5bit binary register numbers of A1 and A2 to read from.
         A1 = int(self.A1, 2)
         A2 = int(self.A2, 2)
         res = []
@@ -91,13 +107,14 @@ class regFile(Processor):
             self.RD2 = self.t[A2%8]
         else:
             self.RD2 = self.s[A2%16]
-    def regWD(self, WD3): # Requires the 5bit binary register number of A3 to write the data WD3
+    def regWrite(self, WD3): # Requires the 5bit binary register number of A3 to write the data WD3
         A3 = int(self.A3, 2)
         if (A3 > 7 and A3 < 16):
             self.t[A3%8] = WD3
         else:
             self.s[A3%16] = WD3
-
+class ALU(Processor):
+    pass
 
 if __name__ == '__main__':
     def NOT(num):
