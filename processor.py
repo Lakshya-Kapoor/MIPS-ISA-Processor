@@ -3,54 +3,56 @@ class Processor:
         self.pc = 0
         self.RD1 = ''
         self.RD2 = ''
-        self.alu1 = ''
-        self.alu2 = ''
+        self.aluSrc1 = ''
+        self.aluSrc2 = ''
+        self.aluCtrl = ''
+        self.aluRes = ''
     def run(self):
         while True:
 
             # Instruction fetch phase
-            self.instruction = i.fetch(self.pc)[::-1]
+            self.instruction = i.fetch()[::-1]
             self.pc += 4
 
             
 
             # Control signals
-            arr = []
-            for i in range(26,32):
-                arr.append(int(self.instruction[i], 2)) 
-            self.regDST = NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5])
-            self.regWR = (arr[0] & NOT(arr[1]) & NOT(arr[2])) | (NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5]))
-            self.aluSrc = arr[0] & NOT(arr[1])
-            self.memRd = arr[0] & NOT(arr[1]) & NOT(arr[2])
-            self.memReg = arr[0] & NOT(arr[1]) & NOT(arr[2])
-            self.memWr = arr[0] & NOT(arr[1]) & arr[2]
-            self.jmp = NOT(arr[0]) & NOT(arr[1]) & NOT(arr[2]) & NOT(arr[3]) & arr[4] & NOT(arr[5])
-            self.branch = arr[3] & NOT(arr[4]) & NOT(arr[5])
-            self.aluOp1 = NOT(arr[3]) & NOT(arr[4]) & NOT(arr[5])
-            self.aluOp0 = arr[3] & NOT(arr[4]) & NOT(arr[5])
+            opcode = []
+            for i in range(31, 25, -1):
+                opcode.append(int(self.instruction[i], 2)) 
+            self.regDST = NOT(opcode[3]) & NOT(opcode[4]) & NOT(opcode[5])
+            self.regWR = (opcode[0] & NOT(opcode[1]) & NOT(opcode[2])) | (NOT(opcode[3]) & NOT(opcode[4]) & NOT(opcode[5]))
+            self.aluSrc = opcode[0] & NOT(opcode[1])
+            self.memRd = opcode[0] & NOT(opcode[1]) & NOT(opcode[2])
+            self.memReg = opcode[0] & NOT(opcode[1]) & NOT(opcode[2])
+            self.memWr = opcode[0] & NOT(opcode[1]) & opcode[2]
+            self.jmp = NOT(opcode[0]) & NOT(opcode[1]) & NOT(opcode[2]) & NOT(opcode[3]) & opcode[4] & NOT(opcode[5])
+            self.branch = opcode[3] & NOT(opcode[4]) & NOT(opcode[5])
+            self.aluOp1 = NOT(opcode[3]) & NOT(opcode[4]) & NOT(opcode[5])
+            self.aluOp0 = opcode[3] & NOT(opcode[4]) & NOT(opcode[5])
             
             # Instruction decode and reg read phase
-            self.A1 = self.instruction[21:25+1]
-            self.A2 = self.instruction[16:20+1]
+            self.A1 = self.instruction[21:25+1][::-1]
+            self.A2 = self.instruction[16:20+1][::-1]
             if self.regDST:
-                self.A3 = self.instruction[11:15+1]
+                self.A3 = self.instruction[11:15+1][::-1]
             else:
-                self.A3 = self.instruction[16:20+1]
+                self.A3 = self.instruction[16:20+1][::-1]
             
             r.regRead()
             
-            temp = self.signExtend(self.instruction[0:15+1])
+            temp = self.signExtend(self.instruction[0:15+1][::-1])
 
-
+            # ALU control unit
 
             # Execute phase
-            self.alu1 = self.RD1
+            self.aluSrc1 = self.RD1
             if self.aluSrc:
-                self.alu2 = temp
+                self.aluSrc2 = temp
             else:
-                self.alu2 = self.RD2
+                self.aluSrc2 = self.RD2
     def signExtend(self, s):
-        return '0'*16 + s
+        return '0'*(32-len(s)) + s
 class instructionMemory(Processor):
     def __init__(self):
         super().__init__()
@@ -63,11 +65,10 @@ class instructionMemory(Processor):
                 for j in range(0, 32, 8):
                     self.instMem[p] = i[j:j+8]
                     p += 1
-    def fetch(self, pc):
-        # pc = int(pc, 2)
+    def fetch(self):
         s = ''
         for j in range(4):
-           s += self.instMem[pc+j]
+           s += self.instMem[self.pc+j]
         return s
 class dataMemory(Processor):
     def __init__(self):
@@ -110,11 +111,23 @@ class regFile(Processor):
     def regWrite(self, WD3): # Requires the 5bit binary register number of A3 to write the data WD3
         A3 = int(self.A3, 2)
         if (A3 > 7 and A3 < 16):
-            self.t[A3%8] = WD3
+            self.t[A3%8] = WD3 # WD3 is a binary string
         else:
             self.s[A3%16] = WD3
 class ALU(Processor):
-    pass
+    def __init__(self):
+        super().__init__()
+    def execute(self):
+        if self.aluCtrl == '000':
+            temp = bin(int(self.aluSrc1, 2) + int(self.aluSrc2, 2))[2:]
+            self.aluRes = self.signExtend(temp)
+        elif self.aluCtrl == '001':
+            temp = bin(int(self.aluSrc1, 2) - int(self.aluSrc2, 2))[2:]
+            self.aluRes = self.signExtend(temp)
+        elif self.aluCtrl == '010':
+            temp = bin(int(self.aluSrc1, 2) * int(self.aluSrc2, 2))[2:]
+            self.aluRes = self.signExtend(temp)
+    
 
 if __name__ == '__main__':
     def NOT(num):
