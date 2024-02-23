@@ -44,13 +44,24 @@ class Processor:
             temp = self.signExtend(self.instruction[0:15+1][::-1])
 
             # ALU control unit
-
+            if self.instruction[26:][::-1] == '001000' or self.instruction[26:][::-1] == '101011':
+                self.aluCtrl = '000'
+            elif self.instruction[26:][::-1] == '000100':
+                self.aluCtrl = '001'
+            elif self.instruction[26:][::-1] == '011100':
+                self.aluCtrl = '010'
+            elif self.instruction[26:][::-1] == '000000':
+                self.aluCtrl = '011'
+            elif self.instruction[26:][::-1] == '001100':
+                self.aluCtrl = '100'    
+                
             # Execute phase
             self.aluSrc1 = self.RD1
             if self.aluSrc:
                 self.aluSrc2 = temp
             else:
                 self.aluSrc2 = self.RD2
+            a.execute()
     def signExtend(self, s):
         return '0'*(32-len(s)) + s
 class instructionMemory(Processor):
@@ -139,4 +150,5 @@ if __name__ == '__main__':
     i = instructionMemory()
     d = dataMemory()
     r = regFile()
+    a = ALU()
     p = Processor()
