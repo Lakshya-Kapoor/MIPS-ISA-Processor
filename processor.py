@@ -28,13 +28,15 @@ class Processor:
             self.memWr = opcode[0] & NOT(opcode[1]) & opcode[2]
             self.jmp = NOT(opcode[0]) & NOT(opcode[1]) & NOT(opcode[2]) & NOT(opcode[3]) & opcode[4] & NOT(opcode[5])
             self.branch = opcode[3] & NOT(opcode[4]) & NOT(opcode[5])
-            if self.instruction[26:][::-1] == "001000": # for addi
+            if self.instruction[26:][::-1] == "001000" or self.instruction[26:][::-1] == "001100": # for addi / andi
                 self.regDST = 0
                 self.regWR = 1
                 self.aluSrc = 1
                 self.memRd = 0
                 self.memReg = 0
                 self.memWr = 0
+                self.branch = 0
+                self.jmp = 0
             elif self.instruction[26:][::-1] == "011100": # for mul
                 self.regDST = 1
                 self.regWR = 1
@@ -42,8 +44,10 @@ class Processor:
                 self.memRd = 0
                 self.memReg = 0
                 self.memWr = 0
-            
+                self.branch = 0
+                self.jmp = 0
             # Instruction decode and reg read phase
+            
             self.A1 = self.instruction[21:25+1][::-1]
             self.A2 = self.instruction[16:20+1][::-1]
             if self.regDST:
@@ -51,6 +55,9 @@ class Processor:
             else:
                 self.A3 = self.instruction[16:20+1][::-1]
             
+            if self.instruction[0:5+1][::-1] == '000010' and self.instruction[26:][::-1] == '000000':
+                self.aluSrc = 2
+                self.A1 = self.A2
             RegFileObj.regRead()
             
 
@@ -69,8 +76,10 @@ class Processor:
             # Execute phase
             temp = self.signExtend(self.instruction[0:15+1][::-1])
             self.aluSrc1 = self.RD1
-            if self.aluSrc:
+            if self.aluSrc == 1:
                 self.aluSrc2 = temp
+            elif self.aluSrc == 2:
+                self.aluSrc2 = self.instruction[6:10+1][::-1]
             else:
                 self.aluSrc2 = self.RD2
             
@@ -80,7 +89,7 @@ class Processor:
                 self.pc = '0'*4 + self.instruction[:25+1][::-1] + '0'*2
 
             if self.branch and int(self.aluRes, 2) == 0:
-                self.pc = '0'*9 + (bin(int(self.pc, 2) + (int(temp, 2) << 2))[2:])
+                self.pc = '0'*9 + (bin(int(self.pc, 2) + (int(temp, 2) << 2)))[2:]
             # Memory access stage
             self.A = self.aluRes
             self.WD = self.RD2
@@ -105,7 +114,7 @@ class instructionMemory(Processor):
     def __init__(self):
         super().__init__()
         self.instMem = {}
-        with open("factorial.txt", "r") as file:
+        with open("pow.txt", "r") as file:
             line = file.readlines()
             l = '00000000010000000000000000000000'
             for k in line:
@@ -192,4 +201,4 @@ if __name__ == '__main__':
     AluObj = ALU()
     ProcessorObj = Processor()
     ProcessorObj.run()
-    print(int(DataObj.dataMem[272]+DataObj.dataMem[273]+DataObj.dataMem[274]+DataObj.dataMem[275], 2))
+    print(int(DataObj.dataMem[256]+DataObj.dataMem[257]+DataObj.dataMem[258]+DataObj.dataMem[259], 2))
