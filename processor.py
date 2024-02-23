@@ -32,6 +32,19 @@ class Processor:
             self.aluOp1 = NOT(opcode[3]) & NOT(opcode[4]) & NOT(opcode[5])
             self.aluOp0 = opcode[3] & NOT(opcode[4]) & NOT(opcode[5])
             
+            #addi
+            if self.instruction[26:][::-1] == "00100":
+                self.regDST = 1
+                self.regWR = 1
+                self.aluSrc = 1
+                self.memRd = 0
+                self.memReg = 0
+                self.memWr = 0
+                self.jmp = 0
+                self.branch = 0
+            
+            if self.instruction[26:][::-1] == "000010":
+                self.jmp = 1
             # Instruction decode and reg read phase
             self.A1 = self.instruction[21:25+1][::-1]
             self.A2 = self.instruction[16:20+1][::-1]
