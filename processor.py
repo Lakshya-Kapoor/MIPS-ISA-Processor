@@ -1,7 +1,7 @@
 global instructionObj, DataObj, RegFileObj, AluObj, ProcessorObj
 class Processor:
     def __init__(self):
-        self.pc = 0
+        self.pc = '00000000010000000000000000000000'
         self.RD1 = ''
         self.RD2 = ''
         self.aluSrc1 = ''
@@ -10,12 +10,11 @@ class Processor:
         self.aluRes = ''
     def run(self):
         while True:
-
             # Instruction fetch phase
             self.instruction = instructionObj.fetch()[::-1]
             if self.instruction == '':
                 break
-            self.pc += 4
+            self.pc = '0'*9 + bin(int(self.pc, 2) + 4)[2:] 
             
             # Control signals
             opcode = []
@@ -29,26 +28,25 @@ class Processor:
             self.memWr = opcode[0] & NOT(opcode[1]) & opcode[2]
             self.jmp = NOT(opcode[0]) & NOT(opcode[1]) & NOT(opcode[2]) & NOT(opcode[3]) & opcode[4] & NOT(opcode[5])
             self.branch = opcode[3] & NOT(opcode[4]) & NOT(opcode[5])
-            self.aluOp1 = NOT(opcode[3]) & NOT(opcode[4]) & NOT(opcode[5])
-            self.aluOp0 = opcode[3] & NOT(opcode[4]) & NOT(opcode[5])
-            
-            #addi
-            if self.instruction[26:][::-1] == "00100":
-                self.regDST = 1
+            if self.instruction[26:][::-1] == "001000": # for addi
+                self.regDST = 0
                 self.regWR = 1
                 self.aluSrc = 1
                 self.memRd = 0
                 self.memReg = 0
                 self.memWr = 0
-                self.jmp = 0
-                self.branch = 0
+            elif self.instruction[26:][::-1] == "011100": # for mul
+                self.regDST = 1
+                self.regWR = 1
+                self.aluSrc = 0
+                self.memRd = 0
+                self.memReg = 0
+                self.memWr = 0
             
-            if self.instruction[26:][::-1] == "000010":
-                self.jmp = 1
             # Instruction decode and reg read phase
             self.A1 = self.instruction[21:25+1][::-1]
             self.A2 = self.instruction[16:20+1][::-1]
-            if self.regDST and self.instruction[26:][::-1] != '001000':
+            if self.regDST:
                 self.A3 = self.instruction[11:15+1][::-1]
             else:
                 self.A3 = self.instruction[16:20+1][::-1]
@@ -71,12 +69,18 @@ class Processor:
             # Execute phase
             temp = self.signExtend(self.instruction[0:15+1][::-1])
             self.aluSrc1 = self.RD1
-            if self.aluSrc or self.instruction[26:][::-1] == '001000':
+            if self.aluSrc:
                 self.aluSrc2 = temp
             else:
                 self.aluSrc2 = self.RD2
+            
             AluObj.execute()
             
+            if self.jmp:
+                self.pc = '0'*4 + self.instruction[:25+1][::-1] + '0'*2
+
+            if self.branch and int(self.aluRes, 2) == 0:
+                self.pc = '0'*9 + (bin(int(self.pc, 2) + (int(temp, 2) << 2))[2:])
             # Memory access stage
             self.A = self.aluRes
             self.WD = self.RD2
@@ -100,19 +104,22 @@ class Processor:
 class instructionMemory(Processor):
     def __init__(self):
         super().__init__()
-        self.instMem = ['']*1000
+        self.instMem = {}
         with open("factorial.txt", "r") as file:
             line = file.readlines()
-            l = 0
+            l = '00000000010000000000000000000000'
             for k in line:
                 k.replace('\n', '')
                 for j in range(0, 32, 8):
                     self.instMem[l] = k[j:j+8]
-                    l += 1
+                    l = '0'*9 + bin(int(l, 2) + 1)[2:]
+            for k in range(4):
+                self.instMem[l] = ''
+                l = '0'*9 + bin(int(l, 2) + 1)[2:]
     def fetch(self):
         s = ''
         for j in range(4):
-           s += self.instMem[ProcessorObj.pc+j]
+            s += self.instMem['0'*9 + bin(int(ProcessorObj.pc, 2)+j)[2:]]
         return s
 class dataMemory(Processor):
     def __init__(self):
