@@ -127,8 +127,12 @@ class ALU(Processor):
         elif self.aluCtrl == '010':
             temp = bin(int(self.aluSrc1, 2) * int(self.aluSrc2, 2))[2:]
             self.aluRes = self.signExtend(temp)
-    
-
+        elif self.aluCtrl == '011':
+            temp = bin(int(self.aluSrc1, 2) >> int(self.aluSrc2, 2))[2:]
+            self.aluRes = self.signExtend(temp)
+        elif self.aluCtrl == '100':
+            temp = bin(int(self.aluSrc1, 2) & int(self.aluSrc2, 2))[2:]
+            self.aluRes = self.signExtend(temp)
 if __name__ == '__main__':
     def NOT(num):
         return 0 if (num) else 1
