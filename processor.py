@@ -96,7 +96,7 @@ class Processor:
 
             if self.memWr:
                 DataObj.memWrite()
-            else:
+            if self.memRd:
                 self.RD = DataObj.memRead()
             
             if self.memReg:
@@ -181,7 +181,7 @@ class ALU(Processor):
             temp = bin(int(ProcessorObj.aluSrc1, 2) + int(ProcessorObj.aluSrc2, 2))[2:]
             ProcessorObj.aluRes = ProcessorObj.signExtend(temp)
         elif ProcessorObj.aluCtrl == '001':
-            temp = bin(int(ProcessorObj.aluSrc1, 2) - int(ProcessorObj.aluSrc2, 2))[2:]
+            temp = bin(abs(int(ProcessorObj.aluSrc1, 2) - int(ProcessorObj.aluSrc2, 2)))[2:]
             ProcessorObj.aluRes = ProcessorObj.signExtend(temp)
         elif ProcessorObj.aluCtrl == '010':
             temp = bin(int(ProcessorObj.aluSrc1, 2) * int(ProcessorObj.aluSrc2, 2))[2:]
