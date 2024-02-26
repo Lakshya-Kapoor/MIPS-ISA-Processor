@@ -1,4 +1,4 @@
-global instructionObj, DataObj, RegFileObj, AluObj, ProcessorObj
+global instructionObj, DataObj, RegFileObj, AluObj, ProcessorObj, filename
 class Processor:
     def __init__(self):
         self.pc = '00000000010000000000000000000000'
@@ -129,7 +129,7 @@ class instructionMemory(Processor):
     def __init__(self):
         super().__init__()
         self.instMem = {}
-        with open("fibonacci.txt", "r") as file:
+        with open(filename, "r") as file:
             line = file.readlines()
             l = '00000000010000000000000000000000'
             for k in line:
@@ -149,7 +149,7 @@ class instructionMemory(Processor):
 class dataMemory(Processor):
     def __init__(self):
         super().__init__()
-        self.dataMem = ['0']*1000
+        self.dataMem = {}
     def memWrite(self):
         A = int(ProcessorObj.A, 2)
         k = 0
@@ -169,6 +169,7 @@ class regFile(Processor):
         self.zero = 0
         self.t = ['0']*7
         self.s = ['0']*7
+        self.t[5] = '00010000000000010000000000000000'
     def regRead(self):
         A1 = int(ProcessorObj.A1, 2)
         A2 = int(ProcessorObj.A2, 2)
@@ -214,10 +215,28 @@ class ALU(Processor):
 if __name__ == '__main__':
     def NOT(num):
         return 0 if (num) else 1
-    instructionObj = instructionMemory()
-    DataObj = dataMemory()
-    RegFileObj = regFile()
-    AluObj = ALU()
-    ProcessorObj = Processor()
-    ProcessorObj.run()
-    print(int(DataObj.dataMem[256]+DataObj.dataMem[257]+DataObj.dataMem[258]+DataObj.dataMem[259], 2))
+    
+    print('Which program do you want to implement?')
+    print('1. Factorial')
+    print('2. Fibonacci')
+    print('3. Pow(x, n)')
+    while True:
+        choice = int(input('Enter your choice : '))
+        if choice == 1:
+            filename = 'factorial.txt'
+        elif choice == 2:
+            filename = 'fibonacci.txt'
+        elif choice == 3:
+            filename = 'pow.txt'
+        else:
+            print('Invalid choice')
+            continue
+        instructionObj = instructionMemory()
+        DataObj = dataMemory()
+        RegFileObj = regFile()
+        AluObj = ALU()
+        ProcessorObj = Processor()
+        ProcessorObj.run()
+        temp = int('00010000000000010000000000000100', 2)
+        print(int(DataObj.dataMem[temp]+DataObj.dataMem[temp+1]+DataObj.dataMem[temp+2]+DataObj.dataMem[temp+3], 2))
+    

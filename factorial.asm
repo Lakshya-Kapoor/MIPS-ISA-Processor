@@ -1,10 +1,11 @@
 .text
 main:
-addi $s0,$zero,5
-sw $s0,0x100($zero) # M[24] = n
+addi $t4,$zero,5
+sw $t4,0($t5) # t5 = 0x10010000
+lw $s0,0($t5) # n = 5
 addi $s1,$s0,1 
-addi $t0,$zero,1 #fact = 1 
-addi $t1,$zero,1 #i = 1 
+addi $t0,$zero,1 # fact = 1 
+addi $t1,$zero,1 # i = 1 
 target:
 	beq $s1,$t1,exitloop
 	mul $t0,$t0,$t1
@@ -12,4 +13,4 @@ target:
 	j target
 
 exitloop:
-	sw $t0,0x110($zero) 
+	sw $t0,4($t5)
