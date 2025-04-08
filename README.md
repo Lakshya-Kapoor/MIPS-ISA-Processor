@@ -7,5 +7,3 @@ This project was done under Proffessor Nandita Rao
 
 ## Credits
 @generator45 : For his valuable insights on the processor and work on the MIPS assembly language
-<br>
-@shantanuTSA : For free riding
